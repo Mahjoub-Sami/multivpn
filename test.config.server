@@ -1,0 +1,20 @@
+#Global Options ...
+mode server
+local_ip 10.200.200.2
+remote_ip 10.200.200.1
+remote_host mai.irontec.com
+
+
+# TCP Plugin options
+# options for tcp client
+
+remote_port 3005
+
+
+# options for tcp server
+local_port 3005
+
+
+
+
+plugin tcp
