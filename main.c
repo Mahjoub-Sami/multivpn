@@ -184,7 +184,8 @@ void MainLoop()
 	while (!finish)
 	{
 		// Preparing FD set 
-		plugin_fillFDSET(&setReading);
+		//plugin_fillFDSET(&setReading);
+        FD_SET(global_v.pipe_from_plugin[0],&setReading);
 		FD_SET(fdTun,&setReading);
 		
 		// Now Blocking
@@ -211,10 +212,10 @@ void MainLoop()
 			}
 		}
 		else 
-		if ( pluginReadSocket=plugin_checkFDISSET(&setReading) )
+		if ( FD_ISSET(global_v.pipe_from_plugin[0],&setReading) )
 		{
 			debug(3,"MAIN Thread: Message is from plugin socket");
-			nbytes=read(pluginReadSocket,buffer,BLOCK_SIZE);
+			nbytes=read(global_v.pipe_from_plugin[0],buffer,BLOCK_SIZE);
 			if (nbytes<=0)
 				debug(3,"MAIN Thread: Failed Reading from pluginSocket");
 			else

@@ -231,80 +231,64 @@ int tcp_start()
 	}
 		
 }
+
 int tcp_startClient()
 {
-	char buffer[BLOCK_SIZE];
-	int nBytes;
-	fd_set	setReading;
-	int maxfd;
-	int sendQueue;
-	int readQueue;
-	
-	debug(2,"TCP Plugin: Starting Client Thread");
-
-	sendQueue = GetSocketSendQueue(TCP_PLUGIN,clientID);
-	readQueue = GetSocketRecvQueue(TCP_PLUGIN,clientID);
-	
-	if (socketRemote > sendQueue)
-		maxfd = socketRemote+1;
-	else	maxfd = sendQueue+1;
-	while (1)
-	{
-                FD_ZERO(&setReading);
-		FD_SET(sendQueue,&setReading);
+    char buffer[BLOCK_SIZE];
+    int nBytes;
+    fd_set  setReading;
+    int maxfd;
+    
+    debug(2,"TCP Plugin: Starting Client Thread");
+    if (socketRemote>global_v.pipe_to_plugin[0])
+        maxfd = socketRemote+1;
+    else    maxfd = global_v.pipe_to_plugin[0]+1;
+    while (1)
+    {
+                FD_SET(global_v.pipe_to_plugin[0],&setReading);
                 FD_SET(socketRemote,&setReading);
-                debug(3,"TCP Plugin: Blocking now, reading from socket or from sendque");
+                debug(3,"TCP Plugin: Blocking now, reading from socket or from pipe");
                 select(maxfd,&setReading,NULL,NULL,NULL);
-	  	if (FD_ISSET(socketRemote,&setReading))
-		{  
-			// Message is from socket
-			debug(4,"TCP Plugin: Message is From socket");
-			nBytes=recv(socketRemote,buffer,BLOCK_SIZE-1,0);
-			if (nBytes<=0)
-				{
-				 debug(3,"TCP Plugin: Error Reading From Socket");
-				 return -1;
-				}
-			else	
-			{
-				debug(3,"TCP Plugin: Read %d bytes from socket",nBytes);
-				// ..... then Write to readQueue
-				nBytes=write(readQueue,buffer,nBytes);
-				if (nBytes<=0)
-				{
-					debug(3,"TCP Plugin: Failed Writing to readQueue");
-					return -1;
-				}	
-				else	debug(3,"TCP Plugin: Write %d bytes to readQueue",nBytes);
-			}
-		}
-		else
-		if (FD_ISSET(sendQueue,&setReading))
-		{
-			// Message is from sendqueue
-			debug(4,"TCP Plugin: Message is From sendqueue");
-			nBytes=read(sendQueue,buffer,BLOCK_SIZE-1);
-			if (nBytes<=0)
-			{
-				debug(3,"TCP Plugin: failed reading From Sendqueue");
-				return -1;
-			}	
-			else	
-			{
-				debug(3,"TCP Plugin: Read %d bytes from sendqueue",nBytes);
-				// ..... then send to socket
-				nBytes=send(socketRemote,buffer,nBytes,0);
-				if (nBytes<=0)
-				{
-					debug(3,"TCP Plugin: Failed Sending to Socket");
-					return -1;
-				}
-				else	debug(3,"TCP Plugin: Write %d bytes to Socket",nBytes);
-			}
-		}
-		
-	}
+        if (FD_ISSET(socketRemote,&setReading))
+        {  
+            // Message is from socket
+                // Read From socket
+            nBytes=recv(socketRemote,buffer,BLOCK_SIZE-1,0);
+            if (nBytes<=0)
+                debug(3,"TCP Plugin: Error Reading From Socket");
+            else    
+            {
+                debug(3,"TCP Plugin: Read %d bytes from socket",nBytes);
+                // ..... then Write to Pipe
+                nBytes=write(global_v.pipe_from_plugin[1],buffer,nBytes);
+                if (nBytes<=0)
+                    debug(3,"TCP Plugin: Failed Writing to Pipe");
+                else    debug(3,"TCP Plugin: Write %d bytes to pipe",nBytes);
+            }
+        }
+        else
+        if (FD_ISSET(global_v.pipe_to_plugin[0],&setReading))
+        {
+            // Message is from pipe
+                // Read From Pipe
+            nBytes=read(global_v.pipe_to_plugin[0],buffer, BLOCK_SIZE-1);
+            if (nBytes<=0)
+                debug(3,"TCP Plugin: failed reading From Pipe");
+            else    
+            {
+                debug(3,"TCP Plugin: Read %d bytes from pipe",nBytes);
+                // ..... then send to socket
+                nBytes=send(socketRemote,buffer,nBytes,0);
+                if (nBytes<=0)
+                    debug(3,"TCP Plugin: Failed Sending to Socket");
+                else    debug(3,"TCP Plugin: Write %d bytes to Socket",nBytes);
+            }
+        }
+        
+    }
 }
+
+
 int tcp_startServer()
 {
 	char buffer[BLOCK_SIZE];
@@ -330,7 +314,8 @@ int tcp_startServer()
 			FD_SET(socketConnected,&setReading);
 			debug(3,"TCP Plugin: Blocking now, reading from socket or from pipe");
 			select(maxfd,&setReading,NULL,NULL,NULL);
-			
+		    debug(3,"TCP Plugin: UNBLOCKED!");
+	
 			if ( FD_ISSET(socketConnected,&setReading) )
 			{
 				//	MESSAGE IS FROM REMOTE SOCKET

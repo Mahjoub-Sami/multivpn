@@ -33,7 +33,7 @@ t_global_v global_v;
 void Globals_Init()
 {
 	global_v.verbose=0;
-	global_v.debug=0;
+	global_v.debug=10;
 	global_v.mode=-1;
 	strncpy(global_v.configfile,"none",strlen("none"));
 	strncpy(global_v.remote_host,"none",strlen("none"));

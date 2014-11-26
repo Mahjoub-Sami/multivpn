@@ -51,13 +51,14 @@ tnplugindata plugindata[NUMBER_PLUGINS];
 //   > Some tunnels do not have a socket as the connection identification (DNS tunneling). The idea is to always use a virtual ID to identify a connection. Then if a socket is used in this protocol, the plugin can store it as connection data and retrieve it each time an operation with a virtual connection ID is requested.
 int StoreConnectionInformation(int pnumber, void *data){
 	int i=0;
-	for (i=1; i++; i<MAXINT && plugindata[pnumber].connections[i].active);
+	for (i=1; i<MAXINT && plugindata[pnumber].connections[i].active;i++);
 	// We did that to reuse empty holes
 	if (i==MAXINT) return 0;
 	plugindata[pnumber].connections[i].active=1;
 	plugindata[pnumber].connections[i].connectiondata=data;
 	plugindata[pnumber].connections[i].sendsocket=socket(AF_INET, SOCK_STREAM,0);
 	plugindata[pnumber].connections[i].recvsocket=socket(AF_INET, SOCK_STREAM,0);
+    printf("Store Connection infromation ID = %d , %d , %d\n",i,plugindata[pnumber].connections[i].sendsocket,plugindata[pnumber].connections[i].recvsocket);
 	return i;
 }
 

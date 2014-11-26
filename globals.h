@@ -41,7 +41,7 @@
 #define	SERVER_MODE		0
 #define	CLIENT_MODE		1
 
-#define	BLOCK_SIZE		1024
+#define	BLOCK_SIZE		1505
 
 typedef struct{
 	int verbose;
