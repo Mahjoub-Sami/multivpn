@@ -19,5 +19,27 @@
   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 Comments are welcome.
+Original Authors: zgor, topolb
 
-	- Gorka Gorrotxategi (zgor), Jose Ignacio Sanchez (Topo[LB]) <topolb@sourceforge.net>
+
+
+Brief Description
+=================
+This was our first try to make a multi protocol (from transport layer to application layer) VPN suite for tunneling purposes, but, mainly: it was for learning.
+
+Current Status
+==============
+
+No authentication at all, very very insecure (overflows, ...), just for learning and testing purporses.
+Only tunnels using TCP connection.
+
+Usage
+=====
+./configure
+make
+
+Planning
+========
+Nothing is planned, but some ideas are being slowwwly coogked, hope in some time new commits appears :D)
+
+
