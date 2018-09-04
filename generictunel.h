@@ -33,4 +33,8 @@
 #include <sys/types.h>
 #include <sys/socket.h>
 
+
+int StoreConnectionInformation(int pnumber, void *data);
+int GetSocketRecvQueue(int pnumber,int id);
+
 #endif

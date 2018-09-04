@@ -46,6 +46,7 @@
 #include "generictunel.h"
 #include "tcp_plugin.h"
 #include "tuntap.h"
+#include "debug.h"
 
 static int socketConnected;
 static int socketRemote;
@@ -53,7 +54,7 @@ static int socketServer;
 static int modeServer;
 static int remoteClientConnected;
 static struct sockaddr_in serverAddress;
-static int sizeSockAddr;
+static socklen_t sizeSockAddr;
 
 //
 static int clientID;	// ID for using generictunnel functions, client mode has only one connection
@@ -67,7 +68,7 @@ int tcp_buildClient(char *remoteHost,int remotePort)
   if ((socketRemote=socket(AF_INET, SOCK_STREAM,0))==-1)
    {
         perror("socket");
-        return;
+        return -1;
    }
 
   if ((he=gethostbyname(remoteHost))==NULL)
@@ -102,8 +103,8 @@ int tcp_buildClient(char *remoteHost,int remotePort)
 }
 int tcp_buildServer(int localPort)
 {
-  int tamanioServer;
-  int tamanioDestino;
+//  int tamanioServer;
+//  int tamanioDestino;
 
   modeServer=1;
   remoteClientConnected=0;
@@ -158,6 +159,7 @@ int tcp_send(int numbytes,char *data)
 
     return enviado;
 }
+
 int tcp_stop()
 {
 	if (modeServer)
@@ -171,9 +173,9 @@ int tcp_stop()
 	{
 		close(socketRemote);
 	}
-	
-	
+	return 0;
 }
+
 int tcp_getSocket()
 {
 	if (modeServer)
@@ -213,6 +215,7 @@ int tcp_build()
 	}
 	return 0;
 }
+
 int tcp_start()
 {
 	debug(1,"TCP Plugin Starting");
@@ -229,7 +232,7 @@ int tcp_start()
 				tcp_startClient();
 				break;
 	}
-		
+	return 0;
 }
 
 int tcp_startClient()
@@ -384,7 +387,7 @@ int tcp_checkParameters()
 		case SERVER_MODE:
 			if ( tcp_checkLocalPort() || tcp_checkLocalIP() || tcp_checkRemoteIP())
 			{
-				debug_error("TCP Plugin Server Mode requires: local_port, local_ip, remote_ip");
+				debug_error("TCP Plugin Server gMode requires: local_port, local_ip, remote_ip");
 				return -1;
 			}
 			else 
@@ -402,7 +405,10 @@ int tcp_checkParameters()
 		default:
 			return -1;
 	}
+
+	return 0;
 }
+
 int tcp_checkMode()
 {
 	return (global_v.mode==-1);

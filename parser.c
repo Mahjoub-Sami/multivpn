@@ -3,6 +3,7 @@
 #include <stdlib.h>
 #include "parser.h"
 #include "globals.h"
+#include "debug.h"
 
 #define MAX_LINE 	4096 
 #define	MAX_FIELD	4096
@@ -16,10 +17,10 @@ int ParseConfigFile(char *file_path)
    FILE *config_file;
    char *temp;
    char line[MAX_LINE + 1];
-   char field[MAX_FIELD+1];
-   char parameter[MAX_PARAMETER + 1];
+   //char field[MAX_FIELD+1];
+   //char parameter[MAX_PARAMETER + 1];
 
-   int nline,i;
+   int nline;
    
    if ((config_file = fopen(file_path, "r")) == NULL)
    {
@@ -51,7 +52,7 @@ int ParseOption(char *option,int nline)
 	char *command;
 	unsigned int n;
 	
-	debug(2,"Parsing Option: %s",option);
+	debug(2,"Parsing Line: %s",option);
 	if (strstr(option,"#"))
 	{
 		debug(2,"Line %d with comments, skipping parsing",nline);
@@ -64,13 +65,14 @@ int ParseOption(char *option,int nline)
 	}
 	else	debug(3,"Line not empty, Really parsing",nline);
 	command=strtok(option," ");
+	
 	if (!strncmp(command,"remote_host",strlen("remote_host")))
 	{
 		strncpy(global_v.remote_host,strtok(NULL," "),50);
 		debug(2,"remote_host is: %s",global_v.remote_host);
 		return 0;
 	}
-	else
+	
 	if (!strncmp(command,"remote_port",strlen("remote_port")))
 	{
 		n=atoi(strtok(NULL," "));
@@ -82,10 +84,9 @@ int ParseOption(char *option,int nline)
 		global_v.remote_port=n;
 		debug(2,"Remote Port is:",global_v.remote_port);
 		return 0;
-		
 
 	}
-	else
+
 	if (!strncmp(command,"local_port",strlen("local_port")))
 	{
 		n=atoi(strtok(NULL," "));
@@ -98,28 +99,34 @@ int ParseOption(char *option,int nline)
 		debug(2,"Local Port is:",global_v.local_port);
 		return 0;
 	}
-	else 
+ 
 	if (!strncmp(command,"local_ip",strlen("local_ip")))
 	{
 		strncpy(global_v.local_ip,strtok(NULL," "),50);
 		debug(2,"Local IP is: %s",global_v.local_ip);
 		return 0;
 	}
-	else
+	if (!strncmp(command,"local_netmask",strlen("local_nemask")))
+	{
+		strncpy(global_v.local_netmask,strtok(NULL," "),50);
+		debug(2,"Local Netmask is: %s",global_v.local_netmask);
+		return 0;
+	}
+
 	if (!strncmp(command,"remote_ip",strlen("remote_ip")))
 	{
 		strncpy(global_v.remote_ip,strtok(NULL," "),50);
 		debug(2,"Remote IP is: %s",global_v.remote_ip);
 		return 0;
 	}
-	else
+
 	if (!strncmp(command,"plugin",strlen("plugin")))
 	{
 		strncpy(global_v.plugin_name,strtok(NULL," "),50);
 		debug(2,"Plugin is: %s",global_v.plugin_name);
 		return 0;
 	}
-	else
+
 	if (!strncmp(command,"mode",strlen("mode")))
 	{
 		command=strtok(NULL," ");
@@ -136,13 +143,56 @@ int ParseOption(char *option,int nline)
 			debug(1,"Client Mode Activated");
 			return 0;
 		}
-		else
+		else 
 		{
-			debug_error("Unkown mode specified, please use: server or client");
-			return -1;
+				debug(2,"Unkown mode ");
+				return (0);
 		}
 	}
-	else debug(2,"Unkown Option parsing config file at line: %d, skipping",nline);
+
+	
+	if (!strncmp(command,"sip_port",strlen("sip_port")))
+	{
+			n=atoi(strtok(NULL," "));
+			if (!n)
+			{
+				debug_error("Error parsing sip_port");
+				return (-1);
+			}
+			global_v.sip_port=n;
+			debug(2,"SIP Port is: %d",global_v.sip_port);
+			return 0;
+	}
+
+	if (!strncmp(command,"sip_transport",strlen("sip_transport")))
+	{
+		strncpy(global_v.sip_transport,strtok(NULL," "),50);
+		debug(2,"SIP Transport is: %s",global_v.sip_transport);
+		return 0;
+	}
+	
+	if (!strncmp(command,"sip_proxy",strlen("sip_proxy")))
+	{
+		strncpy(global_v.sip_proxy,strtok(NULL," "),50);
+		debug(2,"SIP Proxy is: %s",global_v.sip_proxy);
+		return 0;
+	}
+	
+	if (!strncmp(command,"sip_remoteuri",strlen("sip_remoteuri")))
+	{
+		strncpy(global_v.sip_remoteuri,strtok(NULL," "),50);
+		debug(2,"SIP RemoteUri is: %s",global_v.sip_remoteuri);
+		return 0;
+	}
+
+	if (!strncmp(command,"sip_fromuri",strlen("sip_fromuri")))
+	{
+		strncpy(global_v.sip_fromuri,strtok(NULL," "),50);
+		debug(2,"SIP FromUri is: %s",global_v.sip_fromuri);
+		return 0;
+	}
+
+		debug(2,"			Unkown Option parsing config file at line: %d, skipping",nline);
 	
 	return 0;
 }

@@ -46,6 +46,8 @@
 #include "globals.h"
 #include "parser.h"
 #include "plugin.h"
+#include "tuntap.h"
+#include "debug.h"
 
 void MainLoop();
 
@@ -78,7 +80,7 @@ void ShowHelp(void){
 
 
 int main(int argc, char **argv){
-	int optionSelected=1; 
+    //int optionSelected=1;
 	int opt;
 	
 	struct option long_options[]={
@@ -136,6 +138,7 @@ int main(int argc, char **argv){
 	else		debug(1,"Succes Parsing Config File\n");
 
 	debug(1,"MAIN THREAD: Verifying Parameters");
+	
 	if	( plugin_checkConfig(global_v) )
 	{
 		debug_error("Error Checking Plugin Parameters");
@@ -171,7 +174,7 @@ void MainLoop()
 	int maxFd;
 	char buffer[BLOCK_SIZE];
 	fd_set	setReading;
-	int pluginReadSocket;
+	//int pluginReadSocket;
 	
 	fdTun=tun_getFile();
 	if (fdTun>global_v.pipe_from_plugin[0])

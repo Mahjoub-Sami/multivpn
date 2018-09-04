@@ -38,7 +38,7 @@
 #include "debug.h"
 
 
-inline void debug(int level,char *formatString, ...){
+void debug(int level,char *formatString, ...){
 	va_list ap;
 	if (global_v.debug > level)
 	{
@@ -51,7 +51,7 @@ inline void debug(int level,char *formatString, ...){
 	}
 }
 
-inline void debug_error(char *formatString, ...)
+void debug_error(char *formatString, ...)
 {
   	 va_list ap;
    	 fprintf(stderr,"Error:  ");

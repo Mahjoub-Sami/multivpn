@@ -1,6 +1,7 @@
 #ifndef TUNTAP__H
 #define TUNTAP__H
 
+int tun_setNETMASK(char *netmask_str);
 int tun_alloc (const char *path);
 int tun_open();
 char *tun_getIface();

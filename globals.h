@@ -37,6 +37,7 @@
 #define NUMBER_PLUGINS		1
 
 #define	TCP_PLUGIN		0
+#define SIP_PLUGIN		1
 
 #define	SERVER_MODE		0
 #define	CLIENT_MODE		1
@@ -52,9 +53,17 @@ typedef struct{
 	int  plugin;			// Active Plugin number
 	char plugin_name[256];		// Active Plugin Name
 	char local_ip[256];
+	char local_netmask[256];
 	char remote_ip[256];
 	unsigned int  remote_port;
 	unsigned int  local_port;
+	// SIP Plugin specifics:
+	unsigned int sip_port;
+	char sip_transport[256];
+	char sip_remoteuri[256];
+	char sip_fromuri[256];
+	char sip_proxy[256];
+
 	int pipe_from_plugin[2];		// Pipe For Reading from plugin
 	int pipe_to_plugin[2];			// Pipe For Writing to plugin
 }t_global_v;

@@ -1,6 +1,6 @@
 /*
 
-	multivpn - Wep Key Cracker
+	multivpn 
 
 	Copyright (C) 2004  Gorka Gorrotxategi - zgor; Jose Ignacio Sanchez Martin - Topo[LB]
 
@@ -23,7 +23,8 @@
 	generictunnel.c: generic protocol tunnel API.
 */
 
-
+#include <stdio.h>
+#include <stdlib.h>
 #include "generictunel.h"
 #include "globals.h"
 

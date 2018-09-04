@@ -28,14 +28,19 @@
 #include <pthread.h>
 #include <sys/types.h>
 #include <sys/stat.h>
+#include <string.h>
+#include <unistd.h>
 #include "tcp_plugin.h"
+#include "sip_plugin.h"
 #include "globals.h"
+#include "debug.h"
 
 
 // Active Plugin Functions Pointers
-static int (*active_plugin_start)(void);
+static void* (*active_plugin_start)(void *);
 static int (*active_plugin_build)(void);
-static int (*active_plugin_check_parameters)(t_global_v);
+//static int (*active_plugin_check_parameters)(t_global_v);
+static int (*active_plugin_check_parameters)(void);
 static int (*active_plugin_getTunTap)(void);
 static int (*active_plugin_fillFDSET)(fd_set*);
 static int (*active_plugin_checkFDISSET)(fd_set*);
@@ -46,7 +51,7 @@ static pthread_t active_plugin_thread;
 int plugin_checkConfig(t_global_v variables)
 {
 
-	debug("User selected plugin is: %s",global_v.plugin_name);
+	debug(1, "User selected plugin is: %s",global_v.plugin_name);
 	if (!strncmp(global_v.plugin_name,"tcp",strlen("tcp")))
 	{
 		debug(1,"PLUGIN: tcp plugin selected");
@@ -57,13 +62,32 @@ int plugin_checkConfig(t_global_v variables)
 		active_plugin_fillFDSET=tcp_plugin_getFillFDSET();
 		active_plugin_checkFDISSET=tcp_plugin_getCheckFDISSET();
 		active_plugin_getTunTap=tcp_plugin_getTunTap();
-		return (active_plugin_check_parameters(variables));
+		return (active_plugin_check_parameters());
 	}
-	else
+	
+	if (!strncmp(global_v.plugin_name,"sip",strlen("sip")))
 	{
+		debug(1,"PLUGIN: SIP plugin selected, lets fight with RFC3261");
+		global_v.plugin=SIP_PLUGIN;
+		debug(1,"PLUGIN: SIP - getting pointers to functions");
+	   active_plugin_start=sip_plugin_getStart();
+		active_plugin_build=sip_plugin_getBuild();
+		active_plugin_check_parameters=sip_plugin_getCheckParameters();
+		//active_plugin_fillFDSET=sip_plugin_getFillFDSET();
+		//active_plugin_checkFDISSET=sip_plugin_getCheckFDISSET();
+		//active_plugin_getTunTap=sip_plugin_getTunTap();
+		
+		debug(1,"Calling PLUGIN SIP: Returning active plugin check parameters");
+	
+		return (active_plugin_check_parameters());
+
+	}
+
+
+	// In case plugin does not exists
 		debug_error("Plugin: %s not in this source code",global_v.plugin_name);
 		return(-1);
-	}
+	
 }
 int plugin_build()
 {
@@ -73,9 +97,11 @@ int plugin_build()
 		return -1;
 	}
 	
-	debug(1,"PLUGIN: Building Active");
+	debug(1,"PLUGIN: Building Active - calling active_plugin_build");
 	if ( active_plugin_build() )
 		return -1;
+	
+	
 	return 0;
 	
 }
@@ -98,7 +124,9 @@ int plugin_start()
 
 int plugin_getTunTap()
 {
+	return 0;
 }
+
 void plugin_stop()
 {
 	debug(1,"stopping plugin");
@@ -113,7 +141,7 @@ int plugin_fillFDSET(fd_set *set)
 
 int plugin_checkFDISSET(fd_set *set)
 {
-	int s;
+//	int s;
 	
 	debug(3,"Plugin Checking read sockets");
 	

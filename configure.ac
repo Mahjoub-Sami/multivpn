@@ -5,9 +5,12 @@ AC_PROG_INSTALL
 #AC_CONFIG_FILES([Makefile])
 AC_CHECK_HEADERS(stdlib.h string.h unistd.h signal.h time.h netinet/in.h sys/types.h sys/wait.h)
 AC_HEADER_STDC
+m4_ifdef([AM_SILENT_RULES], [AM_SILENT_RULES([yes])])
+
+PKG_CHECK_MODULES([LIBPJPROJECT], [libpjproject])
 
 if test "$CC" = "gcc" ; then
-	CFLAGS="$CFLAGS -Wall -pipe"
+	CFLAGS="$CFLAGS -g -O0 -Wall -Werror -pipe"
 fi
 
 AC_CANONICAL_HOST

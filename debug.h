@@ -28,7 +28,7 @@
 #define	_DEBUG_H
 
 
-inline void debug(int level,char *formatString, ...);
-inline void debug_error(char *formatString, ...);
+void debug(int level,char *formatString, ...);
+void debug_error(char *formatString, ...);
 
 #endif
