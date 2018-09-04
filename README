@@ -2,7 +2,7 @@ multivpn - Multiprotocol VPN tool
 
 
 
-  Copyright (C) 2005 Gorka Gorrotxategi (zgor), Jose Ignacio Sanchez (Topo[LB])
+  Copyright (C) 2002 Gorka Gorrotxategi (zgor), Jose Ignacio Sanchez (Topo[LB])
 
   multivpn is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -41,3 +41,7 @@ make
 Planning
 ========
 Nothing is planned, but some ideas are being slowwwly coogked, hope in some time new commits appears :D)
+
+UPDATE SEPT 2018
+================
+Added SIP Support, just for fun ;) See https://blog.irontec.com (detailed post with usage details).
