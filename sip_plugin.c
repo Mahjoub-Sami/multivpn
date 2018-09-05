@@ -1,8 +1,30 @@
+/*
 
-/* 
+	multivpn - Multiprotocol VPN tool 
 
- */
+	Copyright (C) 2004 Gorka Gorrotxategi - zgor; Jose Ignacio Sanchez Martin - Topo[LB]
 
+	This program is free software; you can redistribute it and/or modify
+	it under the terms of the GNU General Public License as published by
+	the Free Software Foundation; either version 2, or (at your option)
+	any later version.
+
+	This program is distributed in the hope that it will be useful,
+	but WITHOUT ANY WARRANTY; without even the implied warranty of
+	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+	GNU General Public License for more details.
+
+	You should have received a copy of the GNU General Public License
+	along with this program; if not, write to the Free Software Foundation,
+	Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.  
+
+	---------
+
+	SIP_plugin:	PLUGIN via SIP OPTIONS Request's
+	
+	
+	Most of the PJSIP code has been taken from PJPROJECT samples  
+*/
 
 
 /* MULTIVPN HEADERS*/
@@ -25,12 +47,11 @@
 #include <pjlib.h>
 
 /* For logging purpose. */
-#define THIS_FILE   "simpleua.c"
-
-// #include "util.h"
+#define THIS_FILE   "sip_plugin.c"
 
 
-/* Settings */
+/*  PJSIP Settings */
+
 #define AF		pj_AF_INET() /* Change to pj_AF_INET6() for IPv6.
 				      * PJ_HAS_IPV6 must be enabled and
 				      * your system must support IPv6.  */
@@ -55,7 +76,7 @@ static pthread_t sip_plugin_event_thread;
 static pj_bool_t	     g_complete;    /* Quit flag.		*/
 static pjsip_endpoint	    *g_endpt;	    /* SIP endpoint.		*/
 static pj_caching_pool	     cp;	    /* Global pool factory.	*/
-//static pjmedia_endpt	    *g_med_endpt;   /* Media endpoint.		*/
+
 #if 0
 static pjmedia_transport_info g_med_tpinfo[MAX_MEDIA_CNT]; /* Socket info for media	*/
 static pjmedia_transport    *g_med_transport[MAX_MEDIA_CNT];/* Media stream transport	*/
@@ -63,7 +84,7 @@ static pjmedia_transport    *g_med_transport[MAX_MEDIA_CNT];/* Media stream tran
 //static pjmedia_sock_info     g_sock_info[MAX_MEDIA_CNT]; /* Socket info array	*/
 
 /* Call variables: */
-//static pjsip_inv_session    *g_inv;	    /* Current invite session.	*/
+
 #if 0
 static pjmedia_stream       *g_med_stream;  /* Call's audio stream.	*/
 static pjmedia_snd_port	    *g_snd_port;    /* Sound device.		*/
@@ -75,12 +96,6 @@ static pjmedia_vid_port	    *g_vid_renderer;/* Call's video renderer.	*/
 #endif	/* PJMEDIA_HAS_VIDEO */
 #endif
 
-/*
- * Prototypes:
- */
-
-/* Callback to be called when SDP negotiation is done in the call: */
-//static void call_on_media_update( pjsip_inv_session *inv, pj_status_t status);
 
 /* Callback to be called when invite session's state has changed: */
 static void call_on_state_changed( pjsip_inv_session *inv,  pjsip_event *e);
@@ -92,13 +107,6 @@ static void call_on_forked(pjsip_inv_session *inv, pjsip_event *e);
 static pj_bool_t on_rx_request( pjsip_rx_data *rdata );
 
 
-
-
-/* This is a PJSIP module to be registered by application to handle
- * incoming requests outside any dialogs/transactions. The main purpose
- * here is to handle incoming INVITE request message, where we will
- * create a dialog and INVITE session for it.
- */
 static pjsip_module mod_simpleua =
 {
     NULL, NULL,			    /* prev, next.		*/
@@ -122,7 +130,7 @@ void app_perror(char *file,char *message,int status)
 {
 }
 
-/* Notification on incoming messages */
+
 static pj_bool_t logging_on_rx_msg(pjsip_rx_data *rdata)
 {
     PJ_LOG(4,(THIS_FILE, "RX %d bytes %s from %s %s:%d:\n"
@@ -140,7 +148,7 @@ static pj_bool_t logging_on_rx_msg(pjsip_rx_data *rdata)
     return PJ_FALSE;
 }
 
-/* Notification on outgoing messages */
+
 static pj_status_t logging_on_tx_msg(pjsip_tx_data *tdata)
 {
     
@@ -165,7 +173,7 @@ static pj_status_t logging_on_tx_msg(pjsip_tx_data *tdata)
     return PJ_SUCCESS;
 }
 
-/* The module instance. */
+
 static pjsip_module msg_logger = 
 {
     NULL, NULL,				/* prev, next.		*/
@@ -184,11 +192,18 @@ static pjsip_module msg_logger =
 
 };
 
+/*
+	Esta función es invocada desde MAIN=>Plugin, al igual que en TCP
+	Es invocada desde un thread.
+	Básicamente lo que hace es bootear PJSIP y luego se queda loopeando eventos SIP (con un pseudo polling que tiene la LIB)
+	Adicionalmente lanza el thread para controlar los eventos TUN 
+	(el tráfico es bidireccional)
+*/
 int sip_start(int argc,char **argv)
 {
-    //pj_pool_t *pool = NULL;
+
     pj_status_t status;
-//    unsigned i;
+
 
     /* Must init PJLIB first: */
     status = pj_init();
@@ -236,15 +251,6 @@ int sip_start(int argc,char **argv)
 
 	pj_sockaddr_init(AF, &addr, NULL, (pj_uint16_t)SIP_PORT);
 	
-//	if (AF == pj_AF_INET()) {
-	    status = pjsip_udp_transport_start( g_endpt, &addr.ipv4, NULL, 
-						1, NULL);
-//	} else if (AF == pj_AF_INET6()) {
-//	    status = pjsip_udp_transport_start6(g_endpt, &addr.ipv6, NULL,
-//						1, NULL);
-//	} else {
-//	    status = PJ_EAFNOTSUP;
-//	}
 
 	if (status != PJ_SUCCESS) {
 	    app_perror(THIS_FILE, "Unable to start UDP transport", status);
@@ -269,6 +275,10 @@ int sip_start(int argc,char **argv)
     PJ_ASSERT_RETURN(status == PJ_SUCCESS, 1);
 
 
+	/*
+		Esto seguramente no haga falta nada de esto de INVITE's ...
+		
+		*/
     /* 
      * Init invite session module.
      * The invite session module initialization takes additional argument,
@@ -315,10 +325,8 @@ int sip_start(int argc,char **argv)
 
 
 	debug(1,"SIP Plugin launching thread for looping events");
-	
 	pthread_create( &sip_plugin_event_thread, NULL, sip_loop_sip_events, NULL);
-	
-    
+	    
 	/*
 		Aqui es donde estamos esperando a recibir datos del PIPE (que viene del TUN DRIVER)
 		hacemos I/O BLOCK con select
@@ -371,27 +379,19 @@ static void call_on_forked(pjsip_inv_session *inv, pjsip_event *e)
 
 
 /*
- * Callback when incoming requests outside any transactions and any
- * dialogs are received. We're only interested to hande incoming INVITE
- * request, and we'll reject any other requests with 500 response.
+ Cualquier REQUEST SIP pasa por aquí
+ Aquí es dónde hacemos la magia negra de coger la header, desencapsular y tal
  */
 static pj_bool_t on_rx_request( pjsip_rx_data *rdata )
 {
-//    pj_sockaddr hostaddr;
-//    char temp[80], hostip[PJ_INET6_ADDRSTRLEN];
-//    pj_str_t local_uri;
-//    pjsip_dialog *dlg;
-//    pjmedia_sdp_session *local_sdp;
-//    pjsip_tx_data *tdata;
-//    unsigned options = 0;
-//    pj_status_t status;
+
 
 	if (  (rdata->msg_info.msg->line.req.method.id != PJSIP_OPTIONS_METHOD))
-		//&& (rdata->msg_info.msg->line.req.method.id != PJSIP_INFO_METHOD))
 	{
-		debug(2,"Received no INFO/OPTIONS Request, reply 500 sent");
+		debug(2,"Received no OPTIONS Request, reply 500 sent");
 		pj_str_t reason = pj_str("Go home");
 		pjsip_endpt_respond_stateless( g_endpt, rdata,500, &reason,NULL, NULL);
+		return PJ_TRUE;
 	}
 	debug(1,"Received INFO/OPTIONS Request, lets parse it");
 	
@@ -422,7 +422,6 @@ static pj_bool_t on_rx_request( pjsip_rx_data *rdata )
 	decodedpayload = base64_decode(payload,strlen(payload),&lenDecoded);
 	debug(1,"Decoded %d bytes",lenDecoded);
 	debug(1,"Decoded payload with len %d and value %.3s",lenDecoded, decodedpayload);
-// unsigned char *base64_decode(const char *data, size_t input_length, size_t *output_length);
 	
 	debug(1,"Now sending to PIPE for TUNDRIVER !");
 
@@ -546,12 +545,11 @@ void sip_loop_tun_events()
     }
  }
 
-/*
-	MULTIVPN
-	
-*/
 
-// FIXME:
+// FIXME
+// Muchas de estas funciones las tienen que implementar los plugins
+// Aunque realmente solo se llama a start y build :)
+
 int sip_checkParameters()
 {
 	
